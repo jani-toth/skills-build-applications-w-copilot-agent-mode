@@ -13,8 +13,6 @@ function Workouts() {
     let isMounted = true;
 
     async function fetchWorkouts() {
-      console.log('Workouts endpoint:', endpoint);
-
       try {
         const response = await fetch(endpoint, {
           headers: {
@@ -22,8 +20,6 @@ function Workouts() {
           },
         });
         const payload = await response.json();
-
-        console.log('Workouts fetched data:', payload);
 
         if (!response.ok) {
           throw new Error(payload.detail || 'Unable to load workouts.');

@@ -13,8 +13,6 @@ function Teams() {
     let isMounted = true;
 
     async function fetchTeams() {
-      console.log('Teams endpoint:', endpoint);
-
       try {
         const response = await fetch(endpoint, {
           headers: {
@@ -22,8 +20,6 @@ function Teams() {
           },
         });
         const payload = await response.json();
-
-        console.log('Teams fetched data:', payload);
 
         if (!response.ok) {
           throw new Error(payload.detail || 'Unable to load teams.');

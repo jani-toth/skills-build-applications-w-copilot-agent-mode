@@ -13,8 +13,6 @@ function Users() {
     let isMounted = true;
 
     async function fetchUsers() {
-      console.log('Users endpoint:', endpoint);
-
       try {
         const response = await fetch(endpoint, {
           headers: {
@@ -22,8 +20,6 @@ function Users() {
           },
         });
         const payload = await response.json();
-
-        console.log('Users fetched data:', payload);
 
         if (!response.ok) {
           throw new Error(payload.detail || 'Unable to load users.');

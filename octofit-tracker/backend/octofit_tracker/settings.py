@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 import os
+import re
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -21,10 +22,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-y(8hwte^4z1rud-*=o_v*lbum2#qmh$(ho$=mw!-r1o&110xz$'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-y(8hwte^4z1rud-*=o_v*lbum2#qmh$(ho$=mw!-r1o&110xz$')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
 
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
@@ -32,6 +33,9 @@ if os.environ.get('CODESPACE_NAME'):
     ALLOWED_HOSTS.append(f"{os.environ.get('CODESPACE_NAME')}-8000.app.github.dev")
 
 codespace_name = os.environ.get('CODESPACE_NAME')
+# Validate codespace name to only allow safe alphanumeric/hyphen values
+if codespace_name and not re.match(r'^[a-zA-Z0-9\-]+$', codespace_name):
+    codespace_name = None
 if codespace_name:
     CSRF_TRUSTED_ORIGINS = [f"https://{codespace_name}-8000.app.github.dev"]
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -59,8 +63,8 @@ AUTH_USER_MODEL = 'octofit_tracker.User'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -145,10 +149,16 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_HEADERS = ['*']
-CORS_ALLOW_METHODS = ['*']
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+if codespace_name:
+    CORS_ALLOWED_ORIGINS.append(f"https://{codespace_name}-3000.app.github.dev")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field

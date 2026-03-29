@@ -13,8 +13,6 @@ function Leaderboard() {
     let isMounted = true;
 
     async function fetchLeaderboard() {
-      console.log('Leaderboard endpoint:', endpoint);
-
       try {
         const response = await fetch(endpoint, {
           headers: {
@@ -22,8 +20,6 @@ function Leaderboard() {
           },
         });
         const payload = await response.json();
-
-        console.log('Leaderboard fetched data:', payload);
 
         if (!response.ok) {
           throw new Error(payload.detail || 'Unable to load leaderboard data.');

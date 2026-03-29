@@ -1,35 +1,8 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-from django.db import connection
+import datetime
 
-from djongo import models
-
-# Define models for teams, activities, leaderboard, and workouts
-class Team(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    class Meta:
-        app_label = 'octofit_tracker'
-
-class Activity(models.Model):
-    user = models.CharField(max_length=100)
-    team = models.CharField(max_length=100)
-    type = models.CharField(max_length=100)
-    duration = models.IntegerField()
-    class Meta:
-        app_label = 'octofit_tracker'
-
-class Leaderboard(models.Model):
-    team = models.CharField(max_length=100)
-    points = models.IntegerField()
-    class Meta:
-        app_label = 'octofit_tracker'
-
-class Workout(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField()
-    suggested_for = models.CharField(max_length=100)
-    class Meta:
-        app_label = 'octofit_tracker'
+from ...models import Team, Activity, LeaderboardEntry, Workout
 
 User = get_user_model()
 
@@ -38,41 +11,53 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Delete all data
-        User.objects.all().delete()
-        Team.objects.all().delete()
+        LeaderboardEntry.objects.all().delete()
         Activity.objects.all().delete()
-        Leaderboard.objects.all().delete()
         Workout.objects.all().delete()
+        Team.objects.all().delete()
+        User.objects.all().delete()
 
         # Create teams
         marvel = Team.objects.create(name='Marvel')
         dc = Team.objects.create(name='DC')
 
-        # Create users (superheroes)
-        users = [
-            {'username': 'ironman', 'email': 'ironman@marvel.com', 'team': marvel},
-            {'username': 'captainamerica', 'email': 'cap@marvel.com', 'team': marvel},
-            {'username': 'spiderman', 'email': 'spiderman@marvel.com', 'team': marvel},
-            {'username': 'batman', 'email': 'batman@dc.com', 'team': dc},
-            {'username': 'superman', 'email': 'superman@dc.com', 'team': dc},
-            {'username': 'wonderwoman', 'email': 'wonderwoman@dc.com', 'team': dc},
+        # Create users (superheroes) and associate with teams
+        marvel_users = []
+        dc_users = []
+
+        marvel_data = [
+            {'username': 'ironman', 'email': 'ironman@marvel.com'},
+            {'username': 'captainamerica', 'email': 'cap@marvel.com'},
+            {'username': 'spiderman', 'email': 'spiderman@marvel.com'},
         ]
-        for u in users:
+        dc_data = [
+            {'username': 'batman', 'email': 'batman@dc.com'},
+            {'username': 'superman', 'email': 'superman@dc.com'},
+            {'username': 'wonderwoman', 'email': 'wonderwoman@dc.com'},
+        ]
+
+        for u in marvel_data:
             user = User.objects.create_user(username=u['username'], email=u['email'], password='password123')
-            # Add team info as a profile field if needed
+            marvel_users.append(user)
+        marvel.members.set(marvel_users)
+
+        for u in dc_data:
+            user = User.objects.create_user(username=u['username'], email=u['email'], password='password123')
+            dc_users.append(user)
+        dc.members.set(dc_users)
 
         # Create activities
-        Activity.objects.create(user='ironman', team='Marvel', type='Running', duration=30)
-        Activity.objects.create(user='batman', team='DC', type='Cycling', duration=45)
-        Activity.objects.create(user='spiderman', team='Marvel', type='Swimming', duration=25)
-        Activity.objects.create(user='superman', team='DC', type='Running', duration=60)
+        Activity.objects.create(user=marvel_users[0], team=marvel, type='Running', duration=30, date=datetime.date(2024, 1, 1))
+        Activity.objects.create(user=dc_users[0], team=dc, type='Cycling', duration=45, date=datetime.date(2024, 1, 2))
+        Activity.objects.create(user=marvel_users[2], team=marvel, type='Swimming', duration=25, date=datetime.date(2024, 1, 3))
+        Activity.objects.create(user=dc_users[1], team=dc, type='Running', duration=60, date=datetime.date(2024, 1, 4))
 
-        # Create leaderboard
-        Leaderboard.objects.create(team='Marvel', points=100)
-        Leaderboard.objects.create(team='DC', points=120)
+        # Create leaderboard entries
+        LeaderboardEntry.objects.create(user=marvel_users[0], team=marvel, score=100, rank=2)
+        LeaderboardEntry.objects.create(user=dc_users[0], team=dc, score=120, rank=1)
 
         # Create workouts
-        Workout.objects.create(name='Hero HIIT', description='High intensity interval training for heroes.', suggested_for='Marvel')
-        Workout.objects.create(name='Power Circuit', description='Strength and endurance for DC heroes.', suggested_for='DC')
+        Workout.objects.create(user=marvel_users[0], name='Hero HIIT', description='High intensity interval training for heroes.')
+        Workout.objects.create(user=dc_users[0], name='Power Circuit', description='Strength and endurance for DC heroes.')
 
         self.stdout.write(self.style.SUCCESS('octofit_db database populated with test data.'))

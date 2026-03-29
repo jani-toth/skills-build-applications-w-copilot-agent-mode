@@ -13,8 +13,6 @@ function Activities() {
     let isMounted = true;
 
     async function fetchActivities() {
-      console.log('Activities endpoint:', endpoint);
-
       try {
         const response = await fetch(endpoint, {
           headers: {
@@ -22,8 +20,6 @@ function Activities() {
           },
         });
         const payload = await response.json();
-
-        console.log('Activities fetched data:', payload);
 
         if (!response.ok) {
           throw new Error(payload.detail || 'Unable to load activities.');
