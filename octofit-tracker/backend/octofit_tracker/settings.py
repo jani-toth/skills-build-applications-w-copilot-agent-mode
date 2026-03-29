@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -26,8 +27,14 @@ SECRET_KEY = 'django-insecure-y(8hwte^4z1rud-*=o_v*lbum2#qmh$(ho$=mw!-r1o&110xz$
 DEBUG = True
 
 
-# Allow all hosts
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+if os.environ.get('CODESPACE_NAME'):
+    ALLOWED_HOSTS.append(f"{os.environ.get('CODESPACE_NAME')}-8000.app.github.dev")
+
+codespace_name = os.environ.get('CODESPACE_NAME')
+if codespace_name:
+    CSRF_TRUSTED_ORIGINS = [f"https://{codespace_name}-8000.app.github.dev"]
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition
@@ -45,6 +52,9 @@ INSTALLED_APPS = [
     'djongo',
     'corsheaders',
 ]
+
+# Use the project's custom user model.
+AUTH_USER_MODEL = 'octofit_tracker.User'
 
 
 MIDDLEWARE = [
